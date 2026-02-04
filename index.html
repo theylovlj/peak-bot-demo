@@ -421,6 +421,71 @@
                 box-shadow: 0 6px 30px rgba(124, 58, 237, 0.6);
             }
         }
+
+        /* Player Controls */
+        .player-controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(24, 24, 27, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(39, 39, 42, 0.8);
+            border-radius: 16px;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 1000;
+        }
+
+        .control-btn {
+            background: rgba(124, 58, 237, 0.2);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            color: var(--accent-light);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 200ms;
+        }
+
+        .control-btn:hover {
+            background: rgba(124, 58, 237, 0.3);
+            border-color: var(--accent-light);
+        }
+
+        .timeline {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .timeline-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 100ms linear;
+        }
+
+        .time-display {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 8px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -538,7 +603,27 @@
         <button class="cta-button">Add to Discord →</button>
     </div>
 
+    <!-- Player Controls -->
+    <div class="player-controls">
+        <button class="control-btn" id="restartBtn">↻ Restart</button>
+        <button class="control-btn" id="playPauseBtn">⏸ Pause</button>
+        <div class="timeline">
+            <div class="timeline-bar" id="timelineBar">
+                <div class="timeline-progress" id="timelineProgress"></div>
+            </div>
+            <div class="time-display">
+                <span id="currentTime">0:00</span> / <span id="totalTime">0:35</span>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Player state
+        let animationStartTime = null;
+        let isPaused = false;
+        let pausedAt = 0;
+        let animationFrameId = null;
+
         // Utility functions
         function showScene(id) {
             document.getElementById(id).classList.add('active');
@@ -546,6 +631,19 @@
 
         function hideScene(id) {
             document.getElementById(id).classList.remove('active');
+        }
+
+        function formatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateProgress(elapsed) {
+            const progress = (elapsed / 35000) * 100;
+            document.getElementById('timelineProgress').style.width = progress + '%';
+            document.getElementById('currentTime').textContent = formatTime(elapsed);
         }
 
         function typeText(elementId, text, delayPerChar, onComplete) {
@@ -658,10 +756,119 @@
             { time: 27300, action: () => document.getElementById('url').classList.add('visible') },
         ];
 
-        // Execute timeline
-        timeline.forEach(({ time, action }) => {
-            setTimeout(action, time);
+        // Execute timeline based on current time
+        function executeTimeline(currentTime) {
+            timeline.forEach(({ time, action }) => {
+                if (currentTime >= time && currentTime < time + 100) {
+                    action();
+                }
+            });
+        }
+
+        function animate(timestamp) {
+            if (isPaused) return;
+
+            if (!animationStartTime) {
+                animationStartTime = timestamp - pausedAt;
+            }
+
+            const elapsed = timestamp - animationStartTime;
+
+            updateProgress(elapsed);
+            executeTimeline(elapsed);
+
+            if (elapsed < 35000) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                // Animation complete
+                document.getElementById('playPauseBtn').textContent = '↻ Replay';
+            }
+        }
+
+        function startAnimation() {
+            isPaused = false;
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        function pauseAnimation() {
+            isPaused = true;
+            if (animationStartTime) {
+                pausedAt = performance.now() - animationStartTime;
+            }
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+
+        function restartAnimation() {
+            // Reset all scenes
+            document.querySelectorAll('.scene').forEach(scene => scene.classList.remove('active'));
+            document.querySelectorAll('.visible').forEach(el => el.classList.remove('visible'));
+
+            // Reset text content
+            document.getElementById('botMessage').textContent = '';
+            document.getElementById('userMessage').textContent = '';
+            document.getElementById('painText').textContent = '';
+
+            // Reset state
+            animationStartTime = null;
+            pausedAt = 0;
+            isPaused = false;
+
+            // Reset progress
+            updateProgress(0);
+
+            // Start
+            document.getElementById('playPauseBtn').textContent = '⏸ Pause';
+            startAnimation();
+        }
+
+        // Player controls
+        document.getElementById('restartBtn').addEventListener('click', restartAnimation);
+
+        document.getElementById('playPauseBtn').addEventListener('click', function() {
+            if (isPaused || this.textContent.includes('Replay')) {
+                isPaused = false;
+                this.textContent = '⏸ Pause';
+                if (this.textContent.includes('Replay')) {
+                    restartAnimation();
+                } else {
+                    startAnimation();
+                }
+            } else {
+                this.textContent = '▶ Play';
+                pauseAnimation();
+            }
         });
+
+        // Timeline scrubbing
+        document.getElementById('timelineBar').addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = x / rect.width;
+            const targetTime = percentage * 35000;
+
+            // Reset and jump to time
+            restartAnimation();
+            pauseAnimation();
+            pausedAt = targetTime;
+            animationStartTime = performance.now() - targetTime;
+
+            // Execute all timeline items up to this point
+            timeline.forEach(({ time, action }) => {
+                if (time <= targetTime) {
+                    action();
+                }
+            });
+
+            updateProgress(targetTime);
+
+            // Resume if not paused
+            document.getElementById('playPauseBtn').textContent = '▶ Play';
+        });
+
+        // Start animation on load
+        startAnimation();
     </script>
 </body>
 </html>
