@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>Peak Bot Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Background */
+            --bg-primary: #0a0a0b;
+            --bg-card: #111113;
+            --bg-input: #18181b;
+
+            /* Accents */
+            --accent: #8b5cf6;
+            --accent-glow: rgba(139, 92, 246, 0.4);
+            --success: #22c55e;
+
+            /* Text */
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #52525b;
+
+            /* Easing */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .scene {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scene.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Scene 1: Hook */
+        #scene1 .hook-text {
+            font-size: 48px;
+            font-weight: 700;
+            animation: fadeInBlur 1s var(--ease-out) forwards;
+        }
+
+        @keyframes fadeInBlur {
+            from {
+                opacity: 0;
+                filter: blur(10px);
+            }
+            to {
+                opacity: 1;
+                filter: blur(0);
+            }
+        }
+
+        /* Scene 2: Pain Points */
+        #scene2 {
+            gap: 60px;
+        }
+
+        .pain-top {
+            display: flex;
+            gap: 80px;
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .pain-top > div {
+            opacity: 0;
+            animation: staggerIn 300ms var(--ease-out) forwards;
+        }
+
+        .pain-top > div:nth-child(1) { animation-delay: 0s; }
+        .pain-top > div:nth-child(2) { animation-delay: 0.1s; }
+        .pain-top > div:nth-child(3) { animation-delay: 0.2s; }
+
+        .arrows {
+            display: flex;
+            gap: 160px;
+            font-size: 48px;
+            color: var(--text-muted);
+        }
+
+        .arrows > div {
+            opacity: 0;
+            animation: drawDown 400ms var(--ease-out) forwards;
+        }
+
+        .arrows > div:nth-child(1) { animation-delay: 0.4s; }
+        .arrows > div:nth-child(2) { animation-delay: 0.5s; }
+        .arrows > div:nth-child(3) { animation-delay: 0.6s; }
+
+        .pain-bottom {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .pain-bottom .typed {
+            opacity: 0;
+            animation: typeIn 1.2s steps(40) 0.8s forwards;
+        }
+
+        @keyframes staggerIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes drawDown {
+            from {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+
+        @keyframes typeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Scene 3: Transition */
+        #scene3 .star {
+            font-size: 72px;
+            color: var(--accent);
+            animation: starPulse 1s var(--ease-out) infinite;
+            filter: drop-shadow(0 0 30px var(--accent-glow));
+        }
+
+        @keyframes starPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        /* Scene 4: Chat Interface */
+        .chat-card {
+            width: 600px;
+            padding: 32px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: scaleIn 500ms var(--ease-out) forwards;
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        @keyframes scaleIn {
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .message {
+            margin-bottom: 24px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .message-content {
+            font-size: 16px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            margin-left: 52px;
+        }
+
+        .user-message {
+            background: var(--bg-input);
+            padding: 16px;
+            border-radius: 8px;
+            margin-left: 52px;
+        }
+
+        /* Scene 5: Building */
+        #scene5 {
+            align-items: flex-start;
+            justify-content: center;
+            padding-left: 600px;
+        }
+
+        .build-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .build-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        .check {
+            color: var(--success);
+            font-size: 24px;
+            transform: scale(0);
+        }
+
+        @keyframes slideInLeft {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes checkPop {
+            0% { transform: scale(0); }
+            70% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* Scene 6: Result */
+        #scene6 {
+            gap: 40px;
+        }
+
+        .result-text {
+            font-size: 48px;
+            font-weight: 700;
+            opacity: 0;
+            animation: fadeInBlur 600ms var(--ease-out) forwards;
+        }
+
+        .server-preview {
+            width: 500px;
+            padding: 24px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 500ms var(--ease-out) 0.6s forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .preview-channels {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .preview-channel {
+            padding: 8px;
+            background: var(--bg-input);
+            border-radius: 6px;
+        }
+
+        .timer {
+            font-size: 64px;
+            font-weight: 700;
+            color: var(--accent);
+            opacity: 0;
+            animation: fadeInBlur 500ms var(--ease-out) 1.2s forwards;
+        }
+
+        /* Scene 7: CTA */
+        #scene7 {
+            gap: 40px;
+        }
+
+        .tagline {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            opacity: 0;
+            animation: fadeInBlur 600ms var(--ease-out) forwards;
+        }
+
+        .url {
+            font-size: 32px;
+            color: var(--accent);
+            opacity: 0;
+            animation: fadeInBlur 600ms var(--ease-out) 0.2s forwards;
+        }
+
+        .cta-button {
+            margin-top: 20px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            color: white;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInPulse 600ms var(--ease-out) 0.4s forwards, pulse 2s ease-in-out 1s infinite;
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        @keyframes fadeInPulse {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 40px var(--accent-glow);
+            }
+            50% {
+                box-shadow: 0 0 60px var(--accent-glow);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Scene 1: Hook -->
+    <div id="scene1" class="scene">
+        <div class="hook-text">Setting up a Discord server?</div>
+    </div>
+
+    <!-- Scene 2: Pain Points -->
+    <div id="scene2" class="scene">
+        <div class="pain-top">
+            <div>Channels</div>
+            <div>Roles</div>
+            <div>Permissions</div>
+        </div>
+        <div class="arrows">
+            <div>↓</div>
+            <div>↓</div>
+            <div>↓</div>
+        </div>
+        <div class="pain-bottom">
+            <span class="typed">Hours of setup. For every. Single. Server.</span>
+        </div>
+    </div>
+
+    <!-- Scene 3: Transition -->
+    <div id="scene3" class="scene">
+        <div class="star">✦</div>
+    </div>
+
+    <!-- Scene 4: Chat Interface -->
+    <div id="scene4" class="scene">
+        <div class="chat-card">
+            <div class="message">
+                <div class="message-header">
+                    <div class="avatar">🤖</div>
+                    <div class="username">Peak Bot</div>
+                </div>
+                <div class="message-content" id="botMessage"></div>
+            </div>
+            <div class="message">
+                <div class="message-header">
+                    <div class="avatar" style="background: var(--text-muted);">👤</div>
+                    <div class="username">You</div>
+                </div>
+                <div class="user-message" id="userMessage"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scene 5: Building -->
+    <div id="scene5" class="scene">
+        <div class="build-list" id="buildList">
+            <div class="build-item"><span class="check">✓</span> Created #announcements</div>
+            <div class="build-item"><span class="check">✓</span> Created #general</div>
+            <div class="build-item"><span class="check">✓</span> Created #lfg-duos</div>
+            <div class="build-item"><span class="check">✓</span> Created #lfg-squads</div>
+            <div class="build-item"><span class="check">✓</span> Created #tournament-info</div>
+            <div class="build-item"><span class="check">✓</span> Created @Champion role</div>
+            <div class="build-item"><span class="check">✓</span> Created @Contender role</div>
+            <div class="build-item"><span class="check">✓</span> Configured XP system</div>
+            <div class="build-item"><span class="check">✓</span> Enabled anti-spam</div>
+        </div>
+    </div>
+
+    <!-- Scene 6: Result -->
+    <div id="scene6" class="scene">
+        <div class="result-text">Your server is ready.</div>
+        <div class="server-preview">
+            <div class="preview-channels">
+                <div class="preview-channel"># announcements</div>
+                <div class="preview-channel"># general</div>
+                <div class="preview-channel"># lfg-duos</div>
+                <div class="preview-channel"># lfg-squads</div>
+                <div class="preview-channel"># tournament-info</div>
+            </div>
+        </div>
+        <div class="timer" id="timer">47 seconds</div>
+    </div>
+
+    <!-- Scene 7: CTA -->
+    <div id="scene7" class="scene">
+        <div class="tagline">Describe it. We build it.</div>
+        <div class="url">✦ peakbot.pro</div>
+        <button class="cta-button">Add to Discord →</button>
+    </div>
+
+    <script>
+        // Scene timing (in milliseconds)
+        const scenes = [
+            { id: 'scene1', start: 0, end: 3000 },
+            { id: 'scene2', start: 3000, end: 7000 },
+            { id: 'scene3', start: 7000, end: 8000 },
+            { id: 'scene4', start: 8000, end: 14000 },
+            { id: 'scene5', start: 14000, end: 21000 },
+            { id: 'scene6', start: 21000, end: 27000 },
+            { id: 'scene7', start: 27000, end: 35000 }
+        ];
+
+        let startTime = null;
+
+        function updateScene(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = timestamp - startTime;
+
+            scenes.forEach(scene => {
+                const element = document.getElementById(scene.id);
+                if (elapsed >= scene.start && elapsed < scene.end) {
+                    element.classList.add('active');
+                } else {
+                    element.classList.remove('active');
+                }
+            });
+
+            if (elapsed < 35000) {
+                requestAnimationFrame(updateScene);
+            }
+        }
+
+        // Start animation
+        requestAnimationFrame(updateScene);
+
+        // Scene 4: Typewriter effects
+        setTimeout(() => {
+            const botText = "What kind of server do you want to build?";
+            const botElement = document.getElementById('botMessage');
+            let botIndex = 0;
+
+            function typeBotMessage() {
+                if (botIndex < botText.length) {
+                    botElement.textContent += botText[botIndex];
+                    botIndex++;
+                    setTimeout(typeBotMessage, 40);
+                } else {
+                    // Start user message after bot finishes
+                    setTimeout(typeUserMessage, 200);
+                }
+            }
+
+            const userText = "A gaming community for Fortnite with tournaments, ranks, and LFG channels";
+            const userElement = document.getElementById('userMessage');
+            let userIndex = 0;
+
+            function typeUserMessage() {
+                if (userIndex < userText.length) {
+                    userElement.textContent += userText[userIndex];
+                    userIndex++;
+                    setTimeout(typeUserMessage, 30);
+                }
+            }
+
+            typeBotMessage();
+        }, 8000);
+
+        // Scene 5: Stagger build items
+        setTimeout(() => {
+            const buildItems = document.querySelectorAll('.build-item');
+            buildItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.animation = 'slideInLeft 300ms var(--ease-out) forwards';
+                    const check = item.querySelector('.check');
+                    setTimeout(() => {
+                        check.style.animation = 'checkPop 300ms var(--spring) forwards';
+                    }, 150);
+                }, index * 80);
+            });
+        }, 14000);
+
+        // Scene 6: Counter animation
+        setTimeout(() => {
+            const timerElement = document.getElementById('timer');
+            let count = 0;
+            const target = 47;
+            const duration = 800;
+            const increment = target / (duration / 16);
+
+            function updateTimer() {
+                count += increment;
+                if (count < target) {
+                    timerElement.textContent = Math.floor(count) + ' seconds';
+                    requestAnimationFrame(updateTimer);
+                } else {
+                    timerElement.textContent = '47 seconds';
+                }
+            }
+
+            setTimeout(updateTimer, 1200);
+        }, 21000);
+    </script>
+</body>
+</html>
